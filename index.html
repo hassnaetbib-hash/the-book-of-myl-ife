@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="navy">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Book of My Life 🕯️</title>
+
+  <style>
+    /* =========================
+       THEMES & VARIABLES
+    ========================== */
+
+    :root[data-theme="navy"] {
+      --bg-gradient: linear-gradient(135deg, #18222d, #0d1319);
+      --header-bg: linear-gradient(135deg, #111820, #223040);
+      --card-bg: linear-gradient(rgba(247,244,237,0.97), rgba(237,231,217,0.97));
+      --navy-main: #1f2c3a;
+      --slate-blue: #3a4b5c;
+      --gold-accent: #b89343;
+      --gold-light: #d8be7a;
+      --parchment: #ede7d9;
+      --cream-paper: #f7f4ed;
+      --text-dark: #1a2228;
+    }
+
+    :root[data-theme="emerald"] {
+      --bg-gradient: linear-gradient(135deg, #10241b, #08140e);
+      --header-bg: linear-gradient(135deg, #0d1d16, #1b382b);
+      --card-bg: linear-gradient(rgba(244,247,240,0.97), rgba(228,235,222,0.97));
+      --navy-main: #18382b;
+      --slate-blue: #2d5241;
+      --gold-accent: #a88234;
+      --gold-light: #d4b263;
+      --parchment: #e0e8d8;
+      --cream-paper: #f4f7f2;
+      --text-dark: #122119;
+    }
+
+    :root[data-theme="wine"] {
+      --bg-gradient: linear-gradient(135deg, #2b1419, #17090c);
+      --header-bg: linear-gradient(135deg, #210d11, #3b1820);
+      --card-bg: linear-gradient(rgba(248,242,243,0.97), rgba(238,225,228,0.97));
+      --navy-main: #3b1820;
+      --slate-blue: #592d37;
+      --gold-accent: #ba8c38;
+      --gold-light: #dec076;
+      --parchment: #ebdcdb;
+      --cream-paper: #fbf5f6;
+      --text-dark: #241014;
+    }
+
+    :root[data-theme="charcoal"] {
+      --bg-gradient: linear-gradient(135deg, #1f1f1f, #121212);
+      --header-bg: linear-gradient(135deg, #181818, #2a2a2a);
+      --card-bg: linear-gradient(rgba(245,245,245,0.97), rgba(230,230,230,0.97));
+      --navy-main: #262626;
+      --slate-blue: #4a4a4a;
+      --gold-accent: #a67c3d;
+      --gold-light: #d1b173;
+      --parchment: #e2e2e2;
+      --cream-paper: #f8f8f8;
+      --text-dark: #181818;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: "Cormorant Garamond", serif;
+      background: var(--bg-gradient);
+      color: var(--text-dark);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* AUTH OVERLAY */
+    #authOverlay {
+      position: fixed;
+      top:0; left:0; width:100%; height:100%;
+      background: rgba(10, 15, 20, 0.92);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: var(--card-bg);
+      border: 2px solid var(--gold-accent);
+      padding: 35px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      border-radius: 4px;
+    }
+
+    .auth-card h2 {
+      font-family: "Playfair Display", serif;
+      color: var(--navy-main);
+      margin-bottom: 8px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      border-bottom: 1px solid var(--gold-accent);
+      padding-bottom: 10px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      font-size: 1.1rem;
+      font-family: inherit;
+      cursor: pointer;
+      color: var(--slate-blue);
+      font-weight: bold;
+    }
+
+    .auth-tab.active {
+      color: var(--navy-main);
+      border-bottom: 2px solid var(--navy-main);
+    }
+
+    /* HEADER & NAV */
+    header {
+      background: var(--header-bg);
+      color: var(--cream-paper);
+      padding: 25px 20px;
+      text-align: center;
+      border-bottom: 3px double var(--gold-accent);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    header h1 {
+      font-family: "Playfair Display", serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      color: var(--gold-light);
+      letter-spacing: 2px;
+    }
+
+    .user-bar {
+      position: absolute;
+      top: 15px; right: 20px;
+      font-size: 0.95rem;
+      color: var(--gold-light);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--gold-accent);
+      color: var(--cream-paper);
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 3px;
+    }
+
+    nav {
+      background: var(--parchment);
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-bottom: 2px solid var(--gold-accent);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav button {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--slate-blue);
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-dark);
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+
+    nav button:hover, nav button.active {
+      background: var(--navy-main);
+      color: var(--cream-paper);
+      border-color: var(--gold-accent);
+    }
+
+    /* MAIN CONTENT */
+    main {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 0 15px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .victorian-card {
+      background: var(--card-bg);
+      border: 2px solid var(--gold-accent);
+      outline: 1px solid var(--slate-blue);
+      outline-offset: -6px;
+      padding: 30px 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    h2 {
+      font-family: "Playfair Display", serif;
+      color: var(--navy-main);
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 2rem;
+    }
+
+    h3 {
+      color: var(--slate-blue);
+      text-align: center;
+      font-style: italic;
+      margin-bottom: 20px;
+      font-weight: normal;
+    }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--gold-accent);
+      padding: 18px 12px;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .stat:hover {
+      background: #ffffff;
+      transform: translateY(-3px);
+      border-color: var(--navy-main);
+    }
+
+    .stat .number {
+      font-size: 2.2rem;
+      font-family: "Playfair Display", serif;
+      color: var(--navy-main);
+      font-weight: bold;
+    }
+
+    /* INPUTS & BUTTONS */
+    .task-input-area {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], input[type="email"], input[type="password"], textarea, select {
+      font-family: inherit;
+      font-size: 1.1rem;
+      border: 1px solid var(--slate-blue);
+      background: rgba(255,255,255,0.85);
+      padding: 10px 12px;
+      outline: none;
+      border-radius: 3px;
+      width: 100%;
+      user-select: text;
+    }
+
+    .main-button {
+      background: var(--navy-main);
+      color: var(--cream-paper);
+      border: 1px solid var(--gold-accent);
+      padding: 10px 20px;
+      font-size: 1.05rem;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.25s;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .main-button:hover {
+      opacity: 0.9;
+    }
+
+    .task-list { list-style: none; }
+    .task {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      margin: 8px 0;
+      border-bottom: 1px dashed rgba(58,75,92,0.3);
+      background: rgba(255,255,255,0.4);
+    }
+
+    .task.completed strong { text-decoration: line-through; opacity: 0.6; }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 25px 15px;
+      margin-top: 40px;
+      background: var(--header-bg);
+      border-top: 2px double var(--gold-accent);
+      color: var(--gold-light);
+      font-size: 1rem;
+    }
+
+    footer .credits {
+      font-size: 1.15rem;
+      margin-top: 6px;
+      color: var(--cream-paper);
+      font-family: "Playfair Display", serif;
+    }
+
+    footer .credits strong { color: var(--gold-accent); }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10, 15, 20, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+
+    /* THEME SELECTOR BOXES */
+    .theme-picker {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 15px 0;
+    }
+
+    .theme-box {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid var(--gold-accent);
+      transition: transform 0.2s;
+    }
+    .theme-box:hover { transform: scale(1.15); }
+    .theme-navy { background: #1f2c3a; }
+    .theme-emerald { background: #18382b; }
+    .theme-wine { background: #3b1820; }
+    .theme-charcoal { background: #262626; }
+  </style>
+</head>
+<body>
+
+<!-- AUTHENTICATION OVERLAY -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <h2>🕯️ The Book of My Life</h2>
+    <p style="color: var(--slate-blue); font-style: italic;">Access your personalized journal</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="loginTabBtn" onclick="switchAuthMode('login')">Sign In</button>
+      <button class="auth-tab" id="signupTabBtn" onclick="switchAuthMode('signup')">Create Account</button>
+    </div>
+
+    <form id="authForm" onsubmit="handleAuth(event)" style="display: flex; flex-direction: column; gap: 12px;">
+      <input type="email" id="authEmail" placeholder="Your Email Address" required>
+      <input type="password" id="authPassword" placeholder="Password" required minlength="4">
+      <button type="submit" class="main-button" id="authSubmitBtn">Sign In 🗝️</button>
+    </form>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="user-bar" id="userBar" style="display: none;">
+    <span id="userEmailDisplay"></span>
+    <button class="logout-btn" onclick="logout()">Logout 🚪</button>
+  </div>
+  <h1>🕯️ The Book of My Life 🕯️</h1>
+  <p>A Personal Chronicle of Progress & Journey</p>
+</header>
+
+<!-- NAVIGATION -->
+<nav id="mainNav">
+  <!-- Dynamic buttons inserted via JS -->
+</nav>
+
+<!-- MAIN CONTENT -->
+<main>
+
+  <!-- HOME PAGE -->
+  <section id="home" class="page active">
+    <div class="victorian-card welcome">
+      <h2>Welcome to Your Chronicle 🕯️</h2>
+      <p id="todayDate" style="text-align: center; color: var(--slate-blue); margin-bottom: 15px;"></p>
+
+      <div class="stats-grid">
+        <div class="stat" onclick="openQuickAction('todayTasks')">
+          <div class="number" id="todayTasks">0</div>
+          <p>Today's Achievements</p>
+        </div>
+        <div class="stat" onclick="openQuickAction('totalTasks')">
+          <div class="number" id="totalTasks">0</div>
+          <p>Completed Tasks</p>
+        </div>
+        <div class="stat" onclick="openQuickAction('journalCount')">
+          <div class="number" id="journalCount">0</div>
+          <p>Diary Entries</p>
+        </div>
+        <div class="stat" onclick="openQuickAction('settings')">
+          <div class="number">⚙️</div>
+          <p>Personalize App</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DYNAMIC CATEGORY PAGE -->
+  <section id="categoryPage" class="page">
+    <div class="victorian-card">
+      <h2 id="catPageTitle">Category</h2>
+      <h3 id="catPageSub">Manage your goals and progress</h3>
+
+      <div class="task-input-area">
+        <input id="catTaskInput" type="text" placeholder="Add a new item or goal...">
+        <button class="main-button" onclick="addCurrentCategoryTask()">Add Goal</button>
+      </div>
+
+      <ul id="catTaskList" class="task-list"></ul>
+    </div>
+  </section>
+
+  <!-- JOURNAL PAGE -->
+  <section id="journal" class="page">
+    <div class="victorian-card">
+      <h2>📖 My Diary</h2>
+      <textarea id="journalText" placeholder="Write your thoughts and reflections here..."></textarea>
+      <div style="text-align: center; margin-top: 15px;">
+        <button class="main-button" onclick="saveJournal()">Save Entry 🕯️</button>
+      </div>
+      <div id="journalHistory" style="margin-top: 25px;"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS PAGE (THEMES & CUSTOM SECTIONS) -->
+  <section id="settings" class="page">
+    <div class="victorian-card">
+      <h2>⚙️ Personal Settings</h2>
+      <h3>Customize colors and manage your life categories</h3>
+
+      <!-- THEME SELECTOR -->
+      <div style="margin-bottom: 30px; text-align: center;">
+        <strong style="font-size: 1.2rem; color: var(--navy-main);">Choose Your Color Style:</strong>
+        <div class="theme-picker">
+          <div class="theme-box theme-navy" title="Classic Navy" onclick="setTheme('navy')"></div>
+          <div class="theme-box theme-emerald" title="Royal Emerald" onclick="setTheme('emerald')"></div>
+          <div class="theme-box theme-wine" title="Victorian Wine" onclick="setTheme('wine')"></div>
+          <div class="theme-box theme-charcoal" title="Dark Slate" onclick="setTheme('charcoal')"></div>
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px dashed var(--gold-accent); margin: 20px 0;">
+
+      <!-- MANAGE CATEGORIES -->
+      <div>
+        <h3 style="margin-bottom: 10px;">Customize Your Life Sections</h3>
+        <p style="text-align: center; margin-bottom: 15px; color: var(--slate-blue);">Add sections that matter to you, or remove ones you don't need.</p>
+        
+        <div class="task-input-area">
+          <input id="newCatName" type="text" placeholder="New Section Name (e.g. 💼 Business, 🎨 Art)...">
+          <button class="main-button" onclick="addNewCategory()">Add Section</button>
+        </div>
+
+        <ul id="manageCatList" class="task-list"></ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 The Book of My Life. All Rights Reserved.</p>
+  <p class="credits">Created with passion by <strong>Hassnae</strong> ✨</p>
+</footer>
+
+<!-- QUICK ACTION MODAL -->
+<div id="actionModal" class="modal-overlay">
+  <div class="victorian-card" style="max-width: 450px; width: 100%; position: relative;">
+    <span onclick="closeModal()" style="position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 1.5rem;">&times;</span>
+    <h2 id="modalTitle">Quick Action</h2>
+    <div id="modalBody" style="margin-top: 15px;"></div>
+  </div>
+</div>
+
+<script>
+  let authMode = 'login';
+  let currentUser = null;
+  let activeCatId = null;
+
+  // Default structure for new accounts
+  const defaultCategories = [
+    { id: 'medical', name: '⚕️ Medical' },
+    { id: 'university', name: '🎓 University' },
+    { id: 'routine', name: '🌿 Routine' },
+    { id: 'spiritual', name: '🕌 Spiritual' },
+    { id: 'fitness', name: '💪 Fitness' }
+  ];
+
+  let appData = {
+    theme: 'navy',
+    categories: [...defaultCategories],
+    tasks: {},
+    journal: []
+  };
+
+  /* PROTECT CONTENT (DISABLE RIGHT-CLICK) */
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  /* AUTH SYSTEM */
+  function switchAuthMode(mode) {
+    authMode = mode;
+    document.getElementById('loginTabBtn').classList.toggle('active', mode === 'login');
+    document.getElementById('signupTabBtn').classList.toggle('active', mode === 'signup');
+    document.getElementById('authSubmitBtn').innerText = mode === 'login' ? 'Sign In 🗝️' : 'Register Account 📜';
+  }
+
+  function handleAuth(e) {
+    e.preventDefault();
+    const email = document.getElementById('authEmail').value.trim().toLowerCase();
+    const password = document.getElementById('authPassword').value;
+
+    let users = JSON.parse(localStorage.getItem('appUsers') || '{}');
+
+    if (authMode === 'signup') {
+      if (users[email]) {
+        alert("An account with this email already exists!");
+        return;
+      }
+      users[email] = { password: password };
+      localStorage.setItem('appUsers', JSON.stringify(users));
+      alert("Account created successfully!");
+    } else {
+      if (!users[email] || users[email].password !== password) {
+        alert("Invalid email or password!");
+        return;
+      }
+    }
+
+    currentUser = email;
+    localStorage.setItem('activeSession', currentUser);
+    loadUserData();
+    document.getElementById('authOverlay').style.display = 'none';
+    document.getElementById('userBar').style.display = 'flex';
+    document.getElementById('userEmailDisplay').innerText = currentUser;
+    renderAll();
+  }
+
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem('activeSession');
+    location.reload();
+  }
+
+  function loadUserData() {
+    if (!currentUser) return;
+    const stored = localStorage.getItem('data_' + currentUser);
+    if (stored) {
+      appData = JSON.parse(stored);
+      if (!appData.categories) appData.categories = [...defaultCategories];
+      if (!appData.tasks) appData.tasks = {};
+      if (!appData.theme) appData.theme = 'navy';
+    } else {
+      appData = { theme: 'navy', categories: [...defaultCategories], tasks: {}, journal: [] };
+    }
+    setTheme(appData.theme, false);
+  }
+
+  function saveData() {
+    if (currentUser) {
+      localStorage.setItem('data_' + currentUser, JSON.stringify(appData));
+    }
+  }
+
+  /* THEME SWITCHER */
+  function setTheme(themeName, save = true) {
+    document.documentElement.setAttribute('data-theme', themeName);
+    appData.theme = themeName;
+    if (save) saveData();
+  }
+
+  /* RENDER NAVIGATION & PAGES */
+  function renderNav() {
+    const nav = document.getElementById('mainNav');
+    nav.innerHTML = `<button class="active" onclick="switchPage('home', this)">🏛️ Home</button>`;
+
+    appData.categories.forEach(cat => {
+      nav.innerHTML += `<button onclick="openCategoryPage('${cat.id}', this)">${cat.name}</button>`;
+    });
+
+    nav.innerHTML += `<button onclick="switchPage('journal', this)">📖 Diary</button>`;
+    nav.innerHTML += `<button onclick="switchPage('settings', this)">⚙️ Settings</button>`;
+  }
+
+  function switchPage(pageId, btn = null) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+
+    document.getElementById(pageId).classList.add('active');
+    if (btn) btn.classList.add('active');
+
+    if (pageId === 'home') renderDashboard();
+    if (pageId === 'settings') renderCategoryManagement();
+    if (pageId === 'journal') renderJournal();
+  }
+
+  function openCategoryPage(catId, btn) {
+    activeCatId = catId;
+    const cat = appData.categories.find(c => c.id === catId);
+    if (!cat) return;
+
+    document.getElementById('catPageTitle').innerText = cat.name;
+    renderCategoryTasks();
+    switchPage('categoryPage', btn);
+  }
+
+  /* CATEGORY TASK MANAGEMENT */
+  function addCurrentCategoryTask() {
+    if (!activeCatId) return;
+    const input = document.getElementById('catTaskInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!appData.tasks[activeCatId]) appData.tasks[activeCatId] = [];
+
+    const now = new Date();
+    appData.tasks[activeCatId].push({
+      id: Date.now(),
+      text: text,
+      completed: false,
+      date: now.toISOString().split('T')[0]
+    });
+
+    input.value = '';
+    saveData();
+    renderCategoryTasks();
+  }
+
+  function toggleTask(taskId) {
+    if (!activeCatId || !appData.tasks[activeCatId]) return;
+    const task = appData.tasks[activeCatId].find(t => t.id === taskId);
+    if (task) {
+      task.completed = !task.completed;
+      task.completedDate = task.completed ? new Date().toISOString().split('T')[0] : null;
+      saveData();
+      renderCategoryTasks();
+    }
+  }
+
+  function deleteTask(taskId) {
+    if (!activeCatId || !appData.tasks[activeCatId]) return;
+    appData.tasks[activeCatId] = appData.tasks[activeCatId].filter(t => t.id !== taskId);
+    saveData();
+    renderCategoryTasks();
+  }
+
+  function renderCategoryTasks() {
+    const list = document.getElementById('catTaskList');
+    list.innerHTML = '';
+    const tasks = appData.tasks[activeCatId] || [];
+
+    if (tasks.length === 0) {
+      list.innerHTML = `<li style="text-align:center; padding:15px; color:var(--slate-blue);">No goals added yet.</li>`;
+      return;
+    }
+
+    tasks.forEach(t => {
+      list.innerHTML += `
+        <li class="task ${t.completed ? 'completed' : ''}">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id})">
+            <strong>${t.text}</strong>
+          </div>
+          <button onclick="deleteTask(${t.id})" style="background:none; border:none; cursor:pointer;">🗑️</button>
+        </li>
+      `;
+    });
+  }
+
+  /* CATEGORIES MANAGEMENT (SETTINGS) */
+  function addNewCategory() {
+    const input = document.getElementById('newCatName');
+    const name = input.value.trim();
+    if (!name) return;
+
+    const newId = 'cat_' + Date.now();
+    appData.categories.push({ id: newId, name: name });
+    input.value = '';
+
+    saveData();
+    renderNav();
+    renderCategoryManagement();
+  }
+
+  function deleteCategory(catId) {
+    if (confirm("Are you sure you want to remove this section?")) {
+      appData.categories = appData.categories.filter(c => c.id !== catId);
+      delete appData.tasks[catId];
+      saveData();
+      renderNav();
+      renderCategoryManagement();
+    }
+  }
+
+  function renderCategoryManagement() {
+    const list = document.getElementById('manageCatList');
+    list.innerHTML = '';
+
+    appData.categories.forEach(cat => {
+      list.innerHTML += `
+        <li class="task">
+          <strong>${cat.name}</strong>
+          <button onclick="deleteCategory('${cat.id}')" style="background:none; border:none; cursor:pointer;">🗑️ Delete</button>
+        </li>
+      `;
+    });
+  }
+
+  /* JOURNAL */
+  function saveJournal(text = null) {
+    const val = text || document.getElementById("journalText").value.trim();
+    if (!val) return;
+    const now = new Date();
+    appData.journal.unshift({
+      text: val,
+      date: now.toLocaleDateString('en-US', { day: "numeric", month: "long", year: "numeric" }),
+      time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    });
+    document.getElementById("journalText").value = "";
+    saveData();
+    renderJournal();
+    renderDashboard();
+    closeModal();
+  }
+
+  function renderJournal() {
+    const container = document.getElementById("journalHistory");
+    if (!container) return;
+    container.innerHTML = appData.journal.map(j => `
+      <div style="border-left: 3px solid var(--navy-main); padding: 10px; margin-top: 10px; background: rgba(255,255,255,0.4);">
+        <small>${j.date} — ${j.time}</small>
+        <p>${j.text}</p>
+      </div>
+    `).join("");
+  }
+
+  /* DASHBOARD */
+  function renderDashboard() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById("todayDate").innerText = new Date().toLocaleDateString('en-US', { day: "numeric", month: "long", year: "numeric" });
+
+    let totalCompleted = 0;
+    let todayCompleted = 0;
+
+    Object.keys(appData.tasks).forEach(catId => {
+      appData.tasks[catId].forEach(t => {
+        if (t.completed) {
+          totalCompleted++;
+          if (t.completedDate === todayStr) todayCompleted++;
+        }
+      });
+    });
+
+    document.getElementById("totalTasks").innerText = totalCompleted;
+    document.getElementById("todayTasks").innerText = todayCompleted;
+    document.getElementById("journalCount").innerText = appData.journal.length;
+  }
+
+  function openQuickAction(type) {
+    const modal = document.getElementById("actionModal");
+    const body = document.getElementById("modalBody");
+
+    if (type === 'settings') {
+      switchPage('settings');
+      return;
+    }
+
+    if (type === 'todayTasks') {
+      body.innerHTML = `
+        <textarea id="quickJournal" placeholder="Write today's note..."></textarea>
+        <button class="main-button" style="width:100%; margin-top:10px;" onclick="saveJournal(document.getElementById('quickJournal').value)">Save Achievement</button>
+      `;
+    }
+    modal.classList.add("active");
+  }
+
+  function closeModal() { document.getElementById("actionModal").classList.remove("active"); }
+
+  function renderAll() {
+    renderNav();
+    renderDashboard();
+  }
+
+  /* INITIALIZATION */
+  window.addEventListener("DOMContentLoaded", () => {
+    const active = localStorage.getItem('activeSession');
+    if (active) {
+      currentUser = active;
+      document.getElementById('authOverlay').style.display = 'none';
+      document.getElementById('userBar').style.display = 'flex';
+      document.getElementById('userEmailDisplay').innerText = currentUser;
+      loadUserData();
+      renderAll();
+    }
+  });
+</script>
+</body>
+</html>
