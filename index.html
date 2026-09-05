@@ -80,7 +80,6 @@
       line-height: 1.6;
     }
 
-    /* AUTH OVERLAY */
     #authOverlay {
       position: fixed;
       top:0; left:0; width:100%; height:100%;
@@ -134,7 +133,6 @@
       border-bottom: 2px solid var(--navy-main);
     }
 
-    /* HEADER & NAV */
     header {
       background: var(--header-bg);
       color: var(--cream-paper);
@@ -204,7 +202,6 @@
       border-color: var(--gold-accent);
     }
 
-    /* MAIN CONTENT */
     main {
       max-width: 1000px;
       margin: 30px auto;
@@ -241,7 +238,6 @@
       font-weight: normal;
     }
 
-    /* STATS GRID */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -272,7 +268,6 @@
       font-weight: bold;
     }
 
-    /* INPUTS & BUTTONS */
     .task-input-area {
       display: flex;
       gap: 10px;
@@ -331,7 +326,6 @@
 
     .task.completed strong { text-decoration: line-through; opacity: 0.6; }
 
-    /* FOOTER */
     footer {
       text-align: center;
       padding: 25px 15px;
@@ -351,7 +345,6 @@
 
     footer .credits strong { color: var(--gold-accent); }
 
-    /* MODAL */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -383,6 +376,14 @@
     .theme-emerald { background: #18382b; }
     .theme-wine { background: #3b1820; }
     .theme-charcoal { background: #262626; }
+
+    .backup-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
@@ -391,7 +392,7 @@
 <div id="authOverlay">
   <div class="auth-card">
     <h2>🕯️ The Book of My Life</h2>
-    <p style="color: var(--slate-blue); font-style: italic;">Access your online cloud journal</p>
+    <p style="color: var(--slate-blue); font-style: italic;">Access your personalized journal</p>
 
     <div class="auth-tabs">
       <button class="auth-tab active" id="loginTabBtn" onclick="switchAuthMode('login')">Sign In</button>
@@ -400,7 +401,7 @@
 
     <form id="authForm" onsubmit="handleAuth(event)" style="display: flex; flex-direction: column; gap: 12px;">
       <input type="email" id="authEmail" placeholder="Your Email Address" required>
-      <input type="password" id="authPassword" placeholder="Password" required minlength="6">
+      <input type="password" id="authPassword" placeholder="Password" required minlength="4">
       <button type="submit" class="main-button" id="authSubmitBtn">Sign In 🗝️</button>
     </form>
   </div>
@@ -417,9 +418,7 @@
 </header>
 
 <!-- NAVIGATION -->
-<nav id="mainNav">
-  <!-- Dynamic buttons inserted via JS -->
-</nav>
+<nav id="mainNav"></nav>
 
 <!-- MAIN CONTENT -->
 <main>
@@ -496,6 +495,22 @@
 
       <hr style="border: 0; border-top: 1px dashed var(--gold-accent); margin: 20px 0;">
 
+      <!-- BACKUP & RESTORE DATA -->
+      <div style="margin-bottom: 30px; text-align: center;">
+        <h3 style="margin-bottom: 8px;">📦 نقل البيانات بين الهواتف والحواسيب</h3>
+        <p style="color: var(--slate-blue); font-size: 0.95rem;">يمكنك تحميل ملف يحتوي على جميع أهدافك ومذكراتك بنقرة واحدة ونقله لأي جهاز آخر.</p>
+        
+        <div class="backup-buttons">
+          <button class="main-button" onclick="exportData()">📥 تصدير النسخة الاحتياطية (Export)</button>
+          <label class="main-button" style="cursor: pointer; display: inline-block;">
+            📤 استيراد نسخة سابقة (Import)
+            <input type="file" id="importFileInput" accept=".json" onchange="importData(event)" style="display: none;">
+          </label>
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px dashed var(--gold-accent); margin: 20px 0;">
+
       <div>
         <h3 style="margin-bottom: 10px;">Customize Your Life Sections</h3>
         <p style="text-align: center; margin-bottom: 15px; color: var(--slate-blue);">Add sections that matter to you, or remove ones you don't need.</p>
@@ -529,7 +544,6 @@
 
 <script>
   /* FIREBASE CONFIGURATION */
-  /* استبدل هذه الإعدادات بمعلومات مشروعك في Firebase لتفعيل الحفظ السحابي */
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -539,7 +553,6 @@
     appId: "YOUR_APP_ID"
   };
 
-  // Initialize Firebase (or local fallback if default config)
   let db = null;
   let auth = null;
   let isFirebaseActive = false;
@@ -552,7 +565,7 @@
       isFirebaseActive = true;
     }
   } catch (err) {
-    console.warn("Firebase not configured properly, falling back to LocalStorage:", err);
+    console.warn("Firebase fallback to LocalStorage:", err);
   }
 
   let authMode = 'login';
@@ -612,7 +625,7 @@
       try {
         if (authMode === 'signup') {
           await auth.createUserWithEmailAndPassword(email, password);
-          alert("Account created successfully in cloud!");
+          alert("Account created successfully!");
         } else {
           await auth.signInWithEmailAndPassword(email, password);
         }
@@ -620,10 +633,9 @@
         alert("Auth Error: " + error.message);
       }
     } else {
-      // Local fallback
       let users = JSON.parse(localStorage.getItem('appUsers') || '{}');
       if (authMode === 'signup') {
-        if (users[email]) { alert("Account exists!"); return; }
+        if (users[email]) { alert("An account with this email already exists!"); return; }
         users[email] = { password: password };
         localStorage.setItem('appUsers', JSON.stringify(users));
       } else {
@@ -656,9 +668,7 @@
   }
 
   function logout() {
-    if (isFirebaseActive) {
-      auth.signOut();
-    }
+    if (isFirebaseActive) auth.signOut();
     currentUser = null;
     localStorage.removeItem('activeSession');
     location.reload();
@@ -669,19 +679,14 @@
     if (isFirebaseActive && db) {
       try {
         const doc = await db.collection('user_chronicles').doc(currentUser).get();
-        if (doc.exists) {
-          appData = doc.data();
-        } else {
-          saveData(); // Save initial structure
-        }
+        if (doc.exists) appData = doc.data();
+        else saveData();
       } catch (err) {
-        console.error("Error fetching cloud data:", err);
+        console.error("Cloud Error:", err);
       }
     } else {
       const stored = localStorage.getItem('data_' + currentUser);
-      if (stored) {
-        appData = JSON.parse(stored);
-      }
+      if (stored) appData = JSON.parse(stored);
     }
     
     if (!appData.categories) appData.categories = [...defaultCategories];
@@ -703,6 +708,41 @@
       }
     } else {
       localStorage.setItem('data_' + currentUser, JSON.stringify(appData));
+    }
+  }
+
+  /* BACKUP EXPORT & IMPORT SYSTEM */
+  function exportData() {
+    if (!currentUser) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    const filename = `book_of_life_backup_${currentUser}_${Date.now()}.json`;
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", filename);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  }
+
+  function importData(event) {
+    const fileReader = new FileReader();
+    fileReader.onload = function(e) {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (importedData && importedData.categories) {
+          appData = importedData;
+          saveData();
+          renderAll();
+          alert("تم استيراد واسترجاع جميع بياناتك بنجاح! 📜✨");
+        } else {
+          alert("ملف غير صالح!");
+        }
+      } catch (err) {
+        alert("حدث خطأ أثناء قراءة الملف!");
+      }
+    };
+    if (event.target.files[0]) {
+      fileReader.readAsText(event.target.files[0]);
     }
   }
 
