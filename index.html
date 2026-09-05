@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Book of My Life 🕯️</title>
 
-  <style>
-    /* =========================
-       THEMES & VARIABLES
-    ========================== */
+  <!-- FIREBASE SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+  <style>
     :root[data-theme="navy"] {
       --bg-gradient: linear-gradient(135deg, #18222d, #0d1319);
       --header-bg: linear-gradient(135deg, #111820, #223040);
@@ -79,7 +80,6 @@
       line-height: 1.6;
     }
 
-    /* AUTH OVERLAY */
     #authOverlay {
       position: fixed;
       top:0; left:0; width:100%; height:100%;
@@ -133,7 +133,6 @@
       border-bottom: 2px solid var(--navy-main);
     }
 
-    /* HEADER & NAV */
     header {
       background: var(--header-bg);
       color: var(--cream-paper);
@@ -203,7 +202,6 @@
       border-color: var(--gold-accent);
     }
 
-    /* MAIN CONTENT */
     main {
       max-width: 1000px;
       margin: 30px auto;
@@ -240,7 +238,6 @@
       font-weight: normal;
     }
 
-    /* STATS GRID */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -271,7 +268,6 @@
       font-weight: bold;
     }
 
-    /* INPUTS & BUTTONS */
     .task-input-area {
       display: flex;
       gap: 10px;
@@ -303,25 +299,33 @@
       white-space: nowrap;
     }
 
-    .main-button:hover {
-      opacity: 0.9;
-    }
+    .main-button:hover { opacity: 0.9; }
 
     .task-list { list-style: none; }
     .task {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+      flex-direction: column;
+      gap: 6px;
       padding: 12px;
       margin: 8px 0;
       border-bottom: 1px dashed rgba(58,75,92,0.3);
       background: rgba(255,255,255,0.4);
     }
 
+    .task-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .task-time {
+      font-size: 0.85rem;
+      color: var(--slate-blue);
+      font-style: italic;
+    }
+
     .task.completed strong { text-decoration: line-through; opacity: 0.6; }
 
-    /* FOOTER */
     footer {
       text-align: center;
       padding: 25px 15px;
@@ -341,7 +345,6 @@
 
     footer .credits strong { color: var(--gold-accent); }
 
-    /* MODAL */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -354,7 +357,6 @@
     }
     .modal-overlay.active { display: flex; }
 
-    /* THEME SELECTOR BOXES */
     .theme-picker {
       display: flex;
       gap: 12px;
@@ -374,6 +376,14 @@
     .theme-emerald { background: #18382b; }
     .theme-wine { background: #3b1820; }
     .theme-charcoal { background: #262626; }
+
+    .backup-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
@@ -408,9 +418,7 @@
 </header>
 
 <!-- NAVIGATION -->
-<nav id="mainNav">
-  <!-- Dynamic buttons inserted via JS -->
-</nav>
+<nav id="mainNav"></nav>
 
 <!-- MAIN CONTENT -->
 <main>
@@ -469,13 +477,12 @@
     </div>
   </section>
 
-  <!-- SETTINGS PAGE (THEMES & CUSTOM SECTIONS) -->
+  <!-- SETTINGS PAGE -->
   <section id="settings" class="page">
     <div class="victorian-card">
       <h2>⚙️ Personal Settings</h2>
       <h3>Customize colors and manage your life categories</h3>
 
-      <!-- THEME SELECTOR -->
       <div style="margin-bottom: 30px; text-align: center;">
         <strong style="font-size: 1.2rem; color: var(--navy-main);">Choose Your Color Style:</strong>
         <div class="theme-picker">
@@ -488,7 +495,22 @@
 
       <hr style="border: 0; border-top: 1px dashed var(--gold-accent); margin: 20px 0;">
 
-      <!-- MANAGE CATEGORIES -->
+      <!-- BACKUP & RESTORE DATA -->
+      <div style="margin-bottom: 30px; text-align: center;">
+        <h3 style="margin-bottom: 8px;">📦 نقل البيانات بين الهواتف والحواسيب</h3>
+        <p style="color: var(--slate-blue); font-size: 0.95rem;">يمكنك تحميل ملف يحتوي على جميع أهدافك ومذكراتك بنقرة واحدة ونقله لأي جهاز آخر.</p>
+        
+        <div class="backup-buttons">
+          <button class="main-button" onclick="exportData()">📥 تصدير النسخة الاحتياطية (Export)</button>
+          <label class="main-button" style="cursor: pointer; display: inline-block;">
+            📤 استيراد نسخة سابقة (Import)
+            <input type="file" id="importFileInput" accept=".json" onchange="importData(event)" style="display: none;">
+          </label>
+        </div>
+      </div>
+
+      <hr style="border: 0; border-top: 1px dashed var(--gold-accent); margin: 20px 0;">
+
       <div>
         <h3 style="margin-bottom: 10px;">Customize Your Life Sections</h3>
         <p style="text-align: center; margin-bottom: 15px; color: var(--slate-blue);">Add sections that matter to you, or remove ones you don't need.</p>
@@ -521,11 +543,35 @@
 </div>
 
 <script>
+  /* FIREBASE CONFIGURATION */
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  let db = null;
+  let auth = null;
+  let isFirebaseActive = false;
+
+  try {
+    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+      firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+      isFirebaseActive = true;
+    }
+  } catch (err) {
+    console.warn("Firebase fallback to LocalStorage:", err);
+  }
+
   let authMode = 'login';
   let currentUser = null;
   let activeCatId = null;
 
-  // Default structure for new accounts
   const defaultCategories = [
     { id: 'medical', name: '⚕️ Medical' },
     { id: 'university', name: '🎓 University' },
@@ -541,10 +587,28 @@
     journal: []
   };
 
-  /* PROTECT CONTENT (DISABLE RIGHT-CLICK) */
+  /* Exact Full Timestamp Helper (Day/Month/Year - HH:MM:SS) */
+  function getExactTimestamp() {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`;
+  }
+
+  function getTodayDateOnly() {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
   document.addEventListener('contextmenu', e => e.preventDefault());
 
-  /* AUTH SYSTEM */
   function switchAuthMode(mode) {
     authMode = mode;
     document.getElementById('loginTabBtn').classList.toggle('active', mode === 'login');
@@ -552,71 +616,142 @@
     document.getElementById('authSubmitBtn').innerText = mode === 'login' ? 'Sign In 🗝️' : 'Register Account 📜';
   }
 
-  function handleAuth(e) {
+  async function handleAuth(e) {
     e.preventDefault();
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
     const password = document.getElementById('authPassword').value;
 
-    let users = JSON.parse(localStorage.getItem('appUsers') || '{}');
-
-    if (authMode === 'signup') {
-      if (users[email]) {
-        alert("An account with this email already exists!");
-        return;
+    if (isFirebaseActive) {
+      try {
+        if (authMode === 'signup') {
+          await auth.createUserWithEmailAndPassword(email, password);
+          alert("Account created successfully!");
+        } else {
+          await auth.signInWithEmailAndPassword(email, password);
+        }
+      } catch (error) {
+        alert("Auth Error: " + error.message);
       }
-      users[email] = { password: password };
-      localStorage.setItem('appUsers', JSON.stringify(users));
-      alert("Account created successfully!");
     } else {
-      if (!users[email] || users[email].password !== password) {
-        alert("Invalid email or password!");
-        return;
+      let users = JSON.parse(localStorage.getItem('appUsers') || '{}');
+      if (authMode === 'signup') {
+        if (users[email]) { alert("An account with this email already exists!"); return; }
+        users[email] = { password: password };
+        localStorage.setItem('appUsers', JSON.stringify(users));
+      } else {
+        if (!users[email] || users[email].password !== password) {
+          alert("Invalid email or password!"); return;
+        }
       }
+      currentUser = email;
+      localStorage.setItem('activeSession', currentUser);
+      onUserSignedIn(email);
     }
+  }
 
-    currentUser = email;
-    localStorage.setItem('activeSession', currentUser);
-    loadUserData();
+  if (isFirebaseActive) {
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user.email;
+        onUserSignedIn(currentUser);
+      } else {
+        currentUser = null;
+      }
+    });
+  }
+
+  function onUserSignedIn(email) {
     document.getElementById('authOverlay').style.display = 'none';
     document.getElementById('userBar').style.display = 'flex';
-    document.getElementById('userEmailDisplay').innerText = currentUser;
-    renderAll();
+    document.getElementById('userEmailDisplay').innerText = email;
+    loadUserData();
   }
 
   function logout() {
+    if (isFirebaseActive) auth.signOut();
     currentUser = null;
     localStorage.removeItem('activeSession');
     location.reload();
   }
 
-  function loadUserData() {
+  async function loadUserData() {
     if (!currentUser) return;
-    const stored = localStorage.getItem('data_' + currentUser);
-    if (stored) {
-      appData = JSON.parse(stored);
-      if (!appData.categories) appData.categories = [...defaultCategories];
-      if (!appData.tasks) appData.tasks = {};
-      if (!appData.theme) appData.theme = 'navy';
+    if (isFirebaseActive && db) {
+      try {
+        const doc = await db.collection('user_chronicles').doc(currentUser).get();
+        if (doc.exists) appData = doc.data();
+        else saveData();
+      } catch (err) {
+        console.error("Cloud Error:", err);
+      }
     } else {
-      appData = { theme: 'navy', categories: [...defaultCategories], tasks: {}, journal: [] };
+      const stored = localStorage.getItem('data_' + currentUser);
+      if (stored) appData = JSON.parse(stored);
     }
+    
+    if (!appData.categories) appData.categories = [...defaultCategories];
+    if (!appData.tasks) appData.tasks = {};
+    if (!appData.journal) appData.journal = [];
+    if (!appData.theme) appData.theme = 'navy';
+
     setTheme(appData.theme, false);
+    renderAll();
   }
 
-  function saveData() {
-    if (currentUser) {
+  async function saveData() {
+    if (!currentUser) return;
+    if (isFirebaseActive && db) {
+      try {
+        await db.collection('user_chronicles').doc(currentUser).set(appData);
+      } catch (err) {
+        console.error("Cloud Save Error:", err);
+      }
+    } else {
       localStorage.setItem('data_' + currentUser, JSON.stringify(appData));
     }
   }
 
-  /* THEME SWITCHER */
+  /* BACKUP EXPORT & IMPORT SYSTEM */
+  function exportData() {
+    if (!currentUser) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    const filename = `book_of_life_backup_${currentUser}_${Date.now()}.json`;
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", filename);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  }
+
+  function importData(event) {
+    const fileReader = new FileReader();
+    fileReader.onload = function(e) {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (importedData && importedData.categories) {
+          appData = importedData;
+          saveData();
+          renderAll();
+          alert("تم استيراد واسترجاع جميع بياناتك بنجاح! 📜✨");
+        } else {
+          alert("ملف غير صالح!");
+        }
+      } catch (err) {
+        alert("حدث خطأ أثناء قراءة الملف!");
+      }
+    };
+    if (event.target.files[0]) {
+      fileReader.readAsText(event.target.files[0]);
+    }
+  }
+
   function setTheme(themeName, save = true) {
     document.documentElement.setAttribute('data-theme', themeName);
     appData.theme = themeName;
     if (save) saveData();
   }
 
-  /* RENDER NAVIGATION & PAGES */
   function renderNav() {
     const nav = document.getElementById('mainNav');
     nav.innerHTML = `<button class="active" onclick="switchPage('home', this)">🏛️ Home</button>`;
@@ -651,7 +786,6 @@
     switchPage('categoryPage', btn);
   }
 
-  /* CATEGORY TASK MANAGEMENT */
   function addCurrentCategoryTask() {
     if (!activeCatId) return;
     const input = document.getElementById('catTaskInput');
@@ -660,12 +794,12 @@
 
     if (!appData.tasks[activeCatId]) appData.tasks[activeCatId] = [];
 
-    const now = new Date();
     appData.tasks[activeCatId].push({
       id: Date.now(),
       text: text,
       completed: false,
-      date: now.toISOString().split('T')[0]
+      createdAt: getExactTimestamp(),
+      completedAt: null
     });
 
     input.value = '';
@@ -678,7 +812,7 @@
     const task = appData.tasks[activeCatId].find(t => t.id === taskId);
     if (task) {
       task.completed = !task.completed;
-      task.completedDate = task.completed ? new Date().toISOString().split('T')[0] : null;
+      task.completedAt = task.completed ? getExactTimestamp() : null;
       saveData();
       renderCategoryTasks();
     }
@@ -704,17 +838,21 @@
     tasks.forEach(t => {
       list.innerHTML += `
         <li class="task ${t.completed ? 'completed' : ''}">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id})">
-            <strong>${t.text}</strong>
+          <div class="task-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask(${t.id})">
+              <strong>${t.text}</strong>
+            </div>
+            <button onclick="deleteTask(${t.id})" style="background:none; border:none; cursor:pointer;">🗑️</button>
           </div>
-          <button onclick="deleteTask(${t.id})" style="background:none; border:none; cursor:pointer;">🗑️</button>
+          <div class="task-time">
+            🕒 Added: ${t.createdAt || 'N/A'} ${t.completed ? ' | ✅ Done: ' + t.completedAt : ''}
+          </div>
         </li>
       `;
     });
   }
 
-  /* CATEGORIES MANAGEMENT (SETTINGS) */
   function addNewCategory() {
     const input = document.getElementById('newCatName');
     const name = input.value.trim();
@@ -746,23 +884,25 @@
     appData.categories.forEach(cat => {
       list.innerHTML += `
         <li class="task">
-          <strong>${cat.name}</strong>
-          <button onclick="deleteCategory('${cat.id}')" style="background:none; border:none; cursor:pointer;">🗑️ Delete</button>
+          <div class="task-header">
+            <strong>${cat.name}</strong>
+            <button onclick="deleteCategory('${cat.id}')" style="background:none; border:none; cursor:pointer;">🗑️ Delete</button>
+          </div>
         </li>
       `;
     });
   }
 
-  /* JOURNAL */
   function saveJournal(text = null) {
     const val = text || document.getElementById("journalText").value.trim();
     if (!val) return;
-    const now = new Date();
+    
     appData.journal.unshift({
+      id: Date.now(),
       text: val,
-      date: now.toLocaleDateString('en-US', { day: "numeric", month: "long", year: "numeric" }),
-      time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      timestamp: getExactTimestamp()
     });
+    
     document.getElementById("journalText").value = "";
     saveData();
     renderJournal();
@@ -775,15 +915,14 @@
     if (!container) return;
     container.innerHTML = appData.journal.map(j => `
       <div style="border-left: 3px solid var(--navy-main); padding: 10px; margin-top: 10px; background: rgba(255,255,255,0.4);">
-        <small>${j.date} — ${j.time}</small>
-        <p>${j.text}</p>
+        <small style="color: var(--slate-blue); font-weight: bold;">🕯️ ${j.timestamp || 'N/A'}</small>
+        <p style="margin-top: 5px;">${j.text}</p>
       </div>
     `).join("");
   }
 
-  /* DASHBOARD */
   function renderDashboard() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getTodayDateOnly();
     document.getElementById("todayDate").innerText = new Date().toLocaleDateString('en-US', { day: "numeric", month: "long", year: "numeric" });
 
     let totalCompleted = 0;
@@ -793,7 +932,9 @@
       appData.tasks[catId].forEach(t => {
         if (t.completed) {
           totalCompleted++;
-          if (t.completedDate === todayStr) todayCompleted++;
+          if (t.completedAt && t.completedAt.startsWith(todayStr)) {
+            todayCompleted++;
+          }
         }
       });
     });
@@ -828,16 +969,13 @@
     renderDashboard();
   }
 
-  /* INITIALIZATION */
   window.addEventListener("DOMContentLoaded", () => {
-    const active = localStorage.getItem('activeSession');
-    if (active) {
-      currentUser = active;
-      document.getElementById('authOverlay').style.display = 'none';
-      document.getElementById('userBar').style.display = 'flex';
-      document.getElementById('userEmailDisplay').innerText = currentUser;
-      loadUserData();
-      renderAll();
+    if (!isFirebaseActive) {
+      const active = localStorage.getItem('activeSession');
+      if (active) {
+        currentUser = active;
+        onUserSignedIn(currentUser);
+      }
     }
   });
 </script>
